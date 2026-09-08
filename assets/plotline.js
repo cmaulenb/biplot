@@ -105,8 +105,9 @@
   const VIDEO_MODES = {
     paper: { el: document.getElementById('plPaperVideo'), file: 'assets/paper-crumple.mp4', start: 0.16 },
     burst: { el: document.getElementById('plGlitchVideo'), file: 'assets/glitch.mp4', start: 0.14 },
-    converge: { el: document.getElementById('plWindowsVideo'), file: 'assets/windows.mp4', start: 0.12 },
-    sticker: { el: document.getElementById('plFlattenVideo'), file: 'assets/flatten.mp4', start: 0.12 }
+    converge: { el: document.getElementById('plWindowsVideo'), file: 'assets/windows.mp4', start: 0.08, ms: 2100 },
+    sticker: { el: document.getElementById('plFlattenVideo'), file: 'assets/flatten.mp4', start: 0.12 },
+    handoff: { el: document.getElementById('plHandoffVideo'), file: 'assets/handoff.mp4', start: 0.10 }
   };
   Object.values(VIDEO_MODES).forEach(v => {
     v.ready = false; v.dur = 0; v.seekBusy = false; v.pending = null;
@@ -208,10 +209,11 @@
     }
 
     const swapAt = useVid ? 0.52 : 0.44;
+    const totalMs = (useVid && vcfg.ms) ? vcfg.ms : DURATION;   // some clips play slower
     let swapped = false;
     const start = performance.now();
     function frame(now) {
-      const p = Math.min(1, (now - start) / DURATION);
+      const p = Math.min(1, (now - start) / totalMs);
       if (useVid) {
         // scrub the clip by progress; fade IN over the real view at the start
         // (no size jump) and OUT at the end (so the next view is revealed)
