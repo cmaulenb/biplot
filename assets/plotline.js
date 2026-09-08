@@ -95,30 +95,38 @@
   const DURATION = 1050;                 // whole transition
   const veil = document.getElementById('plVeil');
 
-  /* the 0→1 boundary uses the Higgsfield 4K crumple of the real card, scrubbed by
-     transition progress (forward = crush, backward = un-crush). Load it as a Blob
-     up front so the scrub is smooth; fall back to the veil if it never loads. */
-  const paperVideo = document.getElementById('plPaperVideo');
-  let paperReady = false, paperDur = 0, paperSeekBusy = false, paperPending = null;
-  if (paperVideo && !reduceMotion) {
-    fetch('assets/paper-crumple.mp4').then(r => r.ok ? r.blob() : Promise.reject())
+  /* boundaries that use a scrubbed Higgsfield 4K clip instead of a CSS figure.
+     Each clip starts as the on-screen view and ends on the next era's colour, and
+     is scrubbed by transition progress (forward = play, backward = rewind). We
+     enter a little way into each clip (start) so we never compare two identical
+     still frames of different sizes — the motion masks any size difference.
+     Loaded as Blobs up front for smooth scrubbing; if one never loads, that
+     boundary falls back to its CSS figure on the veil. */
+  const VIDEO_MODES = {
+    paper: { el: document.getElementById('plPaperVideo'), file: 'assets/paper-crumple.mp4', start: 0.16 },
+    burst: { el: document.getElementById('plGlitchVideo'), file: 'assets/glitch.mp4', start: 0.14 }
+  };
+  Object.values(VIDEO_MODES).forEach(v => {
+    v.ready = false; v.dur = 0; v.seekBusy = false; v.pending = null;
+    if (!v.el || reduceMotion) return;
+    fetch(v.file).then(r => r.ok ? r.blob() : Promise.reject())
       .then(b => {
-        paperVideo.src = URL.createObjectURL(b);
-        paperVideo.addEventListener('loadedmetadata', () => { paperDur = paperVideo.duration || 0; }, { once: true });
-        paperVideo.addEventListener('canplay', () => { paperReady = paperDur > 0; }, { once: true });
-        paperVideo.load();
-      }).catch(() => { paperReady = false; });
-  }
-  function paperSeek(t) {
-    if (!paperDur) return;
-    if (paperSeekBusy) { paperPending = t; return; }
-    paperSeekBusy = true;
-    try { paperVideo.currentTime = t; } catch (e) { paperSeekBusy = false; }
-  }
-  if (paperVideo) paperVideo.addEventListener('seeked', () => {
-    paperSeekBusy = false;
-    if (paperPending !== null) { const t = paperPending; paperPending = null; paperSeek(t); }
+        v.el.src = URL.createObjectURL(b);
+        v.el.addEventListener('loadedmetadata', () => { v.dur = v.el.duration || 0; }, { once: true });
+        v.el.addEventListener('canplay', () => { v.ready = v.dur > 0; }, { once: true });
+        v.el.load();
+      }).catch(() => { v.ready = false; });
+    v.el.addEventListener('seeked', () => {
+      v.seekBusy = false;
+      if (v.pending !== null) { const t = v.pending; v.pending = null; vidSeek(v, t); }
+    });
   });
+  function vidSeek(v, t) {
+    if (!v.dur) return;
+    if (v.seekBusy) { v.pending = t; return; }
+    v.seekBusy = true;
+    try { v.el.currentTime = t; } catch (e) { v.seekBusy = false; }
+  }
 
   function modeForPair(i, j) {
     const a = Math.min(i, j), b = Math.max(i, j);
@@ -166,41 +174,50 @@
     fromEl.style.setProperty('--dir', dir);
     toEl.style.setProperty('--dir', dir);
 
-    // the era figure rides on the veil
+    // pick the transition: a scrubbed video clip for boundaries that have one,
+    // otherwise the CSS figure riding on the veil
     const mode = modeForPair(chapterEls.indexOf(fromEl), chapterEls.indexOf(toEl));
-    const usePaperVid = (mode === 'paper' && paperReady);
-    overlay.classList.remove(...ALL_MODES.map(m => 'mode-' + m), 'mode-papervid', 'reverse');
+    const vcfg = VIDEO_MODES[mode];
+    const useVid = !!(vcfg && vcfg.ready);
+    overlay.classList.remove(...ALL_MODES.map(m => 'mode-' + m), 'reverse');
     void overlay.offsetWidth;
-    overlay.classList.add('active', usePaperVid ? 'mode-papervid' : 'mode-' + mode);
-    if (!forward && !usePaperVid) overlay.classList.add('reverse');
-    // skip the pristine flat-card portion of the clip: the video enters already
-    // wrinkling, so we never compare two flat cards of different sizes — the fold
-    // motion masks any size difference between the CSS card and the video card
-    const PVSTART = 0.16;
-    const pvTime = f => (PVSTART + (1 - PVSTART) * f) * paperDur;
-    if (usePaperVid) { paperVideo.style.opacity = 0; paperSeek(pvTime(forward ? 0 : 1)); }
-    else veil.style.background = CANVAS_BG[toEl.id] || '#0b0c0a';
+    overlay.classList.add('active');
+    if (!useVid) { overlay.classList.add('mode-' + mode); if (!forward) overlay.classList.add('reverse'); }
 
-    // the outgoing chapter eases out immediately, EXCEPT for the paper-video path:
-    // there the video crossfades in over the still card, so the sizes never jump
-    if (!usePaperVid) {
+    // hide every transition clip, then arm the active one
+    Object.values(VIDEO_MODES).forEach(v => { if (v.el) v.el.style.display = 'none'; });
+    let vTime = null;
+    if (useVid) {
+      // enter a little way in so we never compare two identical still frames of
+      // different sizes — the clip's motion masks any size difference
+      vTime = f => (vcfg.start + (1 - vcfg.start) * f) * vcfg.dur;
+      vcfg.el.style.display = 'block';
+      vcfg.el.style.opacity = 0;
+      vidSeek(vcfg, vTime(forward ? 0 : 1));
+    } else {
+      veil.style.background = CANVAS_BG[toEl.id] || '#0b0c0a';
+    }
+
+    // the outgoing chapter eases out immediately, EXCEPT on a video path:
+    // there the clip crossfades in over the still view, so the sizes never jump
+    if (!useVid) {
       fromEl.classList.remove('pl-active');
       fromEl.classList.add('pl-leaving');
     }
 
-    const swapAt = usePaperVid ? 0.52 : 0.44;
+    const swapAt = useVid ? 0.52 : 0.44;
     let swapped = false;
     const start = performance.now();
     function frame(now) {
       const p = Math.min(1, (now - start) / DURATION);
-      if (usePaperVid) {
-        // scrub the crumple by progress; fade the clip IN over the real card at the
-        // start (so no size jump) and OUT at the end (so the next view is revealed)
-        paperSeek(pvTime(forward ? p : 1 - p));
+      if (useVid) {
+        // scrub the clip by progress; fade IN over the real view at the start
+        // (no size jump) and OUT at the end (so the next view is revealed)
+        vidSeek(vcfg, vTime(forward ? p : 1 - p));
         let o = 1;
-        if (p < 0.07) o = p / 0.07;                                   // quick fade-in over the card
-        else if (p > 0.85) o = Math.max(0, 1 - (p - 0.85) / 0.15);    // fade out to reveal next view
-        paperVideo.style.opacity = o.toFixed(3);
+        if (p < 0.07) o = p / 0.07;
+        else if (p > 0.85) o = Math.max(0, 1 - (p - 0.85) / 0.15);
+        vcfg.el.style.opacity = o.toFixed(3);
         veil.style.opacity = 0;
       } else {
         // veil: ease in to full cover by 0.34, hold to 0.52, ease out by 0.86
@@ -212,7 +229,7 @@
         veil.style.opacity = v.toFixed(3);
       }
 
-      // swap under full cover, then let the incoming chapter assemble as the veil clears
+      // swap under full cover, then let the incoming chapter assemble as it clears
       if (!swapped && p >= swapAt) {
         swapped = true;
         fromEl.classList.remove('pl-leaving', 'pl-active');
@@ -225,9 +242,9 @@
       if (p < 1) requestAnimationFrame(frame);
       else {
         finalizeActive();
-        overlay.classList.remove('active', 'mode-' + mode, 'mode-papervid', 'reverse');
+        overlay.classList.remove('active', 'mode-' + mode, 'reverse');
         veil.style.opacity = 0;
-        if (paperVideo) paperVideo.style.opacity = 1;
+        Object.values(VIDEO_MODES).forEach(v => { if (v.el) { v.el.style.opacity = 1; v.el.style.display = 'none'; } });
         transitioning = false;
       }
     }

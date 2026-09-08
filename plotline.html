@@ -139,10 +139,10 @@ body{overflow:hidden}
    (forward = crush, backward = un-crush). It is the full cover for this boundary:
    it starts as the on-screen card on cream and ends on near-black terminal, so the
    effect flows straight into the next view. */
-.static-overlay .tr-paper-video{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#e8dfc8;
+/* full-cover scrubbed transition clips (paper crumple, terminal glitch, ...) */
+.static-overlay .tr-video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;
 }
-.static-overlay.mode-papervid .tr-paper-video{display:block}
 .static-overlay .tr-paper{
   inset:0;margin:auto;width:min(58vw,500px);height:min(52vh,360px);border-radius:4px;
   background:#f4ecd8;border:1px solid rgba(60,45,20,.2);box-shadow:0 24px 50px rgba(40,30,10,.4);
@@ -459,8 +459,9 @@ body{overflow:hidden}
 
 <div class="static-overlay" id="staticOverlay" aria-hidden="true">
   <div class="veil" id="plVeil"></div>
-  <!-- 0↔1 papel → terminal: video 4K de la tarjeta arrugándose (scrub por progreso) -->
-  <video class="tr-paper-video" id="plPaperVideo" muted playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>
+  <!-- clips 4K scrubbeados por progreso: papel (0↔1) y glitch de terminal (1↔2) -->
+  <video class="tr-video" id="plPaperVideo" muted playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>
+  <video class="tr-video" id="plGlitchVideo" muted playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>
   <!-- 0↔1 papel → terminal: réplica CSS de respaldo si el video no carga -->
   <div class="tr-paper">
     <span class="tp-clip"><svg viewBox="0 0 22 48" aria-hidden="true"><path d="M11 4 C4 4 4 15 4 18 L4 36 C4 43 18 43 18 36 L18 12" stroke="#8a8a8a" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg></span>
