@@ -104,7 +104,8 @@
      boundary falls back to its CSS figure on the veil. */
   const VIDEO_MODES = {
     paper: { el: document.getElementById('plPaperVideo'), file: 'assets/paper-crumple.mp4', start: 0.16 },
-    burst: { el: document.getElementById('plGlitchVideo'), file: 'assets/glitch.mp4', start: 0.14 }
+    burst: { el: document.getElementById('plGlitchVideo'), file: 'assets/glitch.mp4', start: 0.14 },
+    converge: { el: document.getElementById('plWindowsVideo'), file: 'assets/windows.mp4', start: 0.12 }
   };
   Object.values(VIDEO_MODES).forEach(v => {
     v.ready = false; v.dur = 0; v.seekBusy = false; v.pending = null;
