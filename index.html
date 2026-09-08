@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BiPlot: automatización a la medida de tu negocio</title>
+<meta name="description" content="BiPlot diseña y construye automatizaciones a la medida de cada proceso, no plantillas genéricas. Diagnóstico, metodología propia y soporte real después de la entrega.">
+<meta name="theme-color" content="#0E2A47">
+<meta property="og:title" content="BiPlot: automatización a la medida de tu negocio">
+<meta property="og:description" content="Procesos hechos a la medida de cada cliente. Diagnóstico, metodología propia, soporte real.">
+<!-- DEPLOY STEP: og:image y og:url se completan con la URL en vivo al desplegar -->
+<meta property="og:image" content="">
+<meta property="og:url" content="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E2A47'/%3E%3Cpath d='M5 22 C10 22 10 10 16 10 C22 10 22 22 27 22' stroke='%2317C3B2' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='10' r='2.3' fill='%23FF6B4A'/%3E%3C/svg%3E">
+<style>
+:root{
+  --canvas:#0E2A47;
+  --canvas-deep:#081b30;
+  --panel:#132F4E;
+  --panel-2:#0f2740;
+  --accent:#17C3B2;
+  --accent-hover:#20D9C6;
+  --accent-muted:rgba(23,195,178,.22);
+  --warm:#FF6B4A;
+  --warm-hover:#FF8467;
+  --text-primary:#F2F4F7;
+  --text-secondary:#A9B7C6;
+  --text-on-light:#1C1C1E;
+  --line:rgba(169,183,198,.18);
+  --ease:cubic-bezier(.22,.9,.3,1);
+  --ease-in:cubic-bezier(.6,0,.4,1);
+  --tshadow:0 1px 2px rgba(5,8,15,.95),0 3px 12px rgba(5,8,15,.78),0 10px 44px rgba(5,8,15,.8);
+  --display:'Space Grotesk',Inter,sans-serif;
+  --body:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden;overflow-x:clip}
+html{scroll-behavior:auto}
+body{
+  margin:0;
+  background:var(--canvas);
+  color:var(--text-primary);
+  font-family:var(--body);
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.08;letter-spacing:-.01em}
+p{margin:0}
+.skip-link{position:absolute;left:8px;top:-60px;background:var(--accent);color:#04211d;padding:10px 16px;border-radius:8px;z-index:999;transition:top .25s var(--ease);font-family:var(--body);font-weight:600;text-decoration:none}
+.skip-link:focus{top:8px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+/* ===== NAV ===== */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:80;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px clamp(20px,4vw,48px);
+  background:linear-gradient(to bottom, rgba(8,20,36,.75), transparent);
+  pointer-events:none;
+}
+.nav *{pointer-events:auto}
+.nav-mark{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--text-primary)}
+.nav-mark svg{width:28px;height:28px}
+.nav-cta{
+  font-family:var(--body);font-weight:600;font-size:.9rem;
+  background:var(--warm);color:#2b0f08;padding:10px 20px;border-radius:999px;
+  text-decoration:none;transition:transform .3s var(--ease), background .3s var(--ease), box-shadow .3s var(--ease);
+  box-shadow:0 6px 20px rgba(255,107,74,.25);
+}
+.nav-cta:hover{background:var(--warm-hover);transform:translateY(-2px);box-shadow:0 10px 26px rgba(255,107,74,.35)}
+@media (pointer:coarse){.nav-cta{min-height:44px;display:inline-flex;align-items:center;justify-content:center}}
+
+/* ===== HERO ===== */
+.hero-pin{position:relative;height:600vh}
+.hero-stage{
+  position:sticky;top:0;left:0;width:100%;height:100vh;overflow:hidden;
+  background:radial-gradient(ellipse 140% 100% at 50% 30%, var(--canvas) 0%, var(--canvas-deep) 100%);
+}
+.hero-media{position:absolute;inset:0}
+.hero-media video, .hero-media .poster{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  will-change:transform;transform:translateZ(0);
+}
+.hero-media .poster{background-size:cover;background-position:center;opacity:1;transition:opacity .6s var(--ease)}
+.hero-media video{opacity:0;transition:opacity .6s var(--ease)}
+.hero-stage.video-ready .hero-media video{opacity:1}
+.hero-stage.video-ready .hero-media .poster{opacity:0}
+.hero-stage.video-failed .hero-media video{display:none}
+
+.scrim{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 120% 90% at 50% 45%,rgba(6,14,26,0) 30%,rgba(6,14,26,.6) 100%)}
+
+.hero-loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;color:var(--accent);z-index:5}
+.hero-loading svg{width:100%;height:100%;transform:rotate(-90deg)}
+.hero-stage.video-ready .hero-loading, .hero-stage.video-failed .hero-loading{display:none}
+
+.band{
+  position:absolute;left:0;right:0;display:flex;padding:0 clamp(24px,6vw,80px);
+  pointer-events:none;opacity:0;
+}
+.band::before{content:"";position:absolute;inset:-6% -2%;pointer-events:none;
+  opacity:calc(.25 + .75*var(--k,1));
+  background:radial-gradient(ellipse 68% 60% at 50% 50%,rgba(4,9,18,.66) 0%,rgba(4,9,18,.42) 46%,rgba(4,9,18,0) 76%)}
+.band-inner{position:relative;max-width:620px;text-shadow:var(--tshadow)}
+.band .kicker{font-family:var(--mono);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:block}
+.band h2{font-size:clamp(1.7rem,4.2vw,3rem);color:var(--text-primary)}
+.band p.sub{margin-top:16px;font-size:clamp(1rem,1.6vw,1.2rem);color:var(--text-secondary);max-width:46ch}
+
+#band-1{top:16%}
+#band-1 .band-inner{margin-left:0}
+#band-2{top:38%;justify-content:flex-end}
+#band-2 .band-inner{margin-right:0;text-align:right}
+#band-3{top:20%}
+#band-settle{top:0;height:100%;align-items:center;justify-content:center;text-align:center}
+#band-settle .band-inner{max-width:720px}
+#band-settle .cta-row{margin-top:34px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+
+/* word/char split engine */
+.split{display:inline}
+.w{display:inline-block;white-space:pre}
+.c{display:inline-block}
+.hero-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* scatter entrance (band 1: threads tangling apart) */
+#band-1 .c{
+  --kc:clamp(0,(var(--k,0) - var(--th,0))*2.6,1);
+  opacity:var(--kc);
+  transform:translate(calc((1 - var(--kc))*var(--jx,0px)),calc((1 - var(--kc))*var(--jy,0px))) rotate(calc((1 - var(--kc))*var(--jr,0deg)));
+}
+/* grid snap-align (band 2: things falling into order) */
+#band-2 .c{
+  --kc:clamp(0,(var(--k,0) - var(--th,0))*2.6,1);
+  opacity:var(--kc);
+  transform:translateX(calc((1 - var(--kc))*var(--jx,0px)));
+}
+/* word punch (band 3: clarity lands) */
+#band-3 .w{
+  --kc:clamp(0,(var(--k,0) - var(--th,0))*3,1);
+  --ks:clamp(0,(var(--k,0) - var(--th,0) - .1)*3.2,1);
+  opacity:var(--kc);
+  transform:scale(calc(0.6 + 0.52*var(--kc) - .12*var(--ks)));
+}
+/* settle: word rise + staged subline/cta */
+#band-settle h2 .w{
+  --kc:clamp(0,(var(--k,0) - var(--th,0))*2.8,1);
+  opacity:var(--kc);
+  transform:translateY(calc((1 - var(--kc))*22px));
+}
+#band-settle p.sub{
+  opacity:clamp(0,(var(--k,0) - .5)*4,1);
+  transform:translateY(calc((1 - clamp(0,(var(--k,0) - .5)*4,1))*14px));
+}
+#band-settle .cta-row{
+  opacity:clamp(0,(var(--k,0) - .68)*5,1);
+  transform:translateY(calc((1 - clamp(0,(var(--k,0) - .68)*5,1))*10px));
+}
+
+.btn{
+  font-family:var(--body);font-weight:600;font-size:.95rem;text-decoration:none;
+  padding:14px 28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease), background .3s var(--ease);
+  text-shadow:none;
+}
+.btn.primary{background:var(--warm);color:#2b0f08;box-shadow:0 8px 26px rgba(255,107,74,.3)}
+.btn.primary:hover{background:var(--warm-hover);transform:translateY(-3px);box-shadow:0 14px 30px rgba(255,107,74,.4)}
+.btn.ghost{background:rgba(242,244,247,.08);color:var(--text-primary);border:1px solid rgba(242,244,247,.28);backdrop-filter:blur(6px)}
+.btn.ghost:hover{background:rgba(242,244,247,.16);transform:translateY(-3px)}
+@media (pointer:coarse){.btn{min-height:44px}}
+
+.scroll-cue{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);color:var(--text-secondary);opacity:.8;
+  display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  animation:cueFloat 2.4s ease-in-out infinite;animation-delay:-1.2s}
+.scroll-cue svg{width:16px;height:16px}
+@keyframes cueFloat{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+.hero-stage:not(.at-top) .scroll-cue{opacity:0;pointer-events:none}
+
+/* static hero (five gates) */
+.static-hero{display:none;position:absolute;inset:0;background-size:cover;background-position:center}
+.static-hero .scrim{background:radial-gradient(ellipse 120% 100% at 50% 40%,rgba(6,14,26,.25) 0%,rgba(6,14,26,.72) 100%)}
+.static-hero-content{position:relative;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 24px}
+.static-hero-content .inner{max-width:640px;text-shadow:var(--tshadow)}
+.static-hero-content .kicker{font-family:var(--mono);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:14px}
+.static-hero-content h1{font-size:clamp(2rem,7vw,3.2rem)}
+.static-hero-content p{margin-top:16px;color:var(--text-secondary);font-size:1.05rem}
+.static-hero-content .cta-row{margin-top:30px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+@media (max-width:720px), (orientation:portrait) and (max-width:1024px), (orientation:portrait) and (pointer:coarse), (orientation:landscape) and (pointer:coarse) and (max-height:560px), (prefers-reduced-motion:reduce){
+  .hero-pin{height:100vh}
+  .hero-stage{position:relative}
+  .band, .hero-loading, .scroll-cue, .hero-media{display:none}
+  .static-hero{display:block;background-image:url('assets/hero-ending.jpg')}
+}
+@media (max-height:560px){.scroll-cue,.hud{display:none}}
+
+/* ===== SECTIONS ===== */
+main{position:relative;background:var(--canvas);z-index:1}
+section{padding:clamp(72px,10vw,140px) clamp(20px,6vw,64px);position:relative}
+.wrap{max-width:1120px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:16px}
+h2.h-lg{font-size:clamp(1.8rem,4vw,2.7rem);max-width:18ch}
+.lede{margin-top:18px;color:var(--text-secondary);font-size:clamp(1rem,1.6vw,1.15rem);max-width:60ch}
+
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease), transform .8s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.reveal-group.in .part{opacity:1;transform:none}
+.reveal-group .part{opacity:0;transform:translateY(20px);transition:opacity .7s var(--ease), transform .7s var(--ease)}
+.reveal-group.in .part:nth-child(1){transition-delay:0ms}
+.reveal-group.in .part:nth-child(2){transition-delay:90ms}
+.reveal-group.in .part:nth-child(3){transition-delay:180ms}
+.reveal-group.in .part:nth-child(4){transition-delay:270ms}
+body.motion-settled .reveal-group.in .part:nth-child(1),
+body.motion-settled .reveal-group.in .part:nth-child(2),
+body.motion-settled .reveal-group.in .part:nth-child(3),
+body.motion-settled .reveal-group.in .part:nth-child(4){transition-delay:0ms}
+
+/* problem section */
+.problem-grid{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.problem-card{background:var(--panel);padding:32px 28px}
+.problem-card .quote-mark{font-family:var(--display);font-size:2.4rem;color:var(--accent-muted);line-height:1}
+.problem-card p{margin-top:14px;font-size:1.02rem;color:var(--text-primary);line-height:1.5}
+.problem-card span.tag{display:block;margin-top:18px;font-family:var(--mono);font-size:.72rem;color:var(--text-secondary);letter-spacing:.06em;text-transform:uppercase}
+@media (max-width:820px){.problem-grid{grid-template-columns:1fr}}
+
+/* method / line rail */
+.method{margin-top:64px;position:relative}
+.method-rail{position:absolute;left:19px;top:8px;bottom:8px;width:2px;background:var(--line)}
+.method-rail-fill{position:absolute;left:0;top:0;width:100%;height:0%;background:var(--accent);transition:height .1s linear}
+.method-step{position:relative;padding-left:56px;padding-bottom:52px}
+.method-step:last-child{padding-bottom:0}
+.method-step .dot{position:absolute;left:11px;top:4px;width:18px;height:18px;border-radius:50%;background:var(--panel);border:2px solid var(--line);transition:border-color .4s var(--ease), background .4s var(--ease), box-shadow .4s var(--ease)}
+.method-step.in .dot{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 6px var(--accent-muted)}
+.method-step .num{font-family:var(--mono);color:var(--accent);font-size:.8rem;letter-spacing:.1em}
+.method-step h3{margin-top:8px;font-size:1.3rem}
+.method-step p{margin-top:10px;color:var(--text-secondary);max-width:58ch}
+
+/* services */
+.services-grid{margin-top:56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.service-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:30px 26px;transition:transform .35s var(--ease), border-color .35s var(--ease)}
+.service-card:hover{transform:translateY(-6px);border-color:var(--accent-muted)}
+.service-card .ico{width:40px;height:40px;color:var(--accent)}
+.service-card h3{margin-top:18px;font-size:1.15rem}
+.service-card p{margin-top:10px;color:var(--text-secondary);font-size:.96rem;line-height:1.5}
+
+/* differentiators - asymmetric band, avoids repeating services grid skeleton */
+.diff{margin-top:56px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+.diff-list{display:flex;flex-direction:column;gap:26px}
+.diff-item{display:flex;gap:16px}
+.diff-item .n{font-family:var(--mono);color:var(--accent);font-size:.85rem;padding-top:3px}
+.diff-item h3{font-size:1.1rem}
+.diff-item p{margin-top:6px;color:var(--text-secondary);font-size:.95rem}
+.diff-visual{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:36px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden}
+@media (max-width:860px){.diff{grid-template-columns:1fr}.diff-visual{order:-1}}
+
+/* case study */
+.case{background:var(--panel);border-radius:24px;margin-top:56px;padding:clamp(32px,5vw,60px);display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;position:relative;overflow:hidden}
+.case::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 100% 0%,var(--accent-muted),transparent 60%);pointer-events:none;opacity:.5}
+.case-stat{display:flex;gap:28px;margin-top:26px;flex-wrap:wrap}
+.case-stat div b{font-family:var(--display);font-size:1.8rem;color:var(--accent);display:block}
+.case-stat div span{font-size:.82rem;color:var(--text-secondary)}
+.case-visual{border-radius:16px;overflow:hidden;background:var(--panel-2);aspect-ratio:4/3}
+.case-visual img{width:100%;height:100%;object-fit:cover}
+@media (max-width:860px){.case{grid-template-columns:1fr}}
+
+/* pricing */
+.pricing-grid{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.price-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px 26px;display:flex;flex-direction:column}
+.price-card.featured{border-color:var(--accent);position:relative;background:linear-gradient(180deg,var(--panel),var(--panel-2))}
+.price-card.featured::before{content:"Recomendado";position:absolute;top:-13px;left:26px;background:var(--accent);color:#04211d;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px}
+.price-card h3{font-size:1.1rem}
+.price-card .amount{font-family:var(--display);font-size:1.7rem;margin-top:12px;color:var(--text-primary)}
+.price-card .amount span{font-family:var(--body);font-size:.85rem;color:var(--text-secondary);font-weight:400}
+.price-card ul{list-style:none;padding:0;margin:20px 0 0;display:flex;flex-direction:column;gap:10px;flex:1}
+.price-card li{font-size:.92rem;color:var(--text-secondary);padding-left:22px;position:relative}
+.price-card li::before{content:"";position:absolute;left:0;top:6px;width:12px;height:12px;background:var(--accent);mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center/contain no-repeat}
+.price-card .btn{margin-top:24px}
+@media (max-width:900px){.pricing-grid{grid-template-columns:1fr}}
+
+/* plotline teaser carousel */
+.pl-carousel-wrap{margin-top:56px;position:relative}
+.pl-viewport{overflow:hidden;border-radius:22px}
+.pl-track{display:flex;transition:transform .55s var(--ease)}
+.pl-slide{flex:0 0 100%;display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--panel);border:1px solid var(--line);min-height:380px}
+.pl-visual{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:28px}
+.pl-copy{padding:clamp(28px,4vw,52px);display:flex;flex-direction:column;justify-content:center}
+.pl-copy .pl-era{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin-bottom:14px}
+.pl-copy h3{font-family:var(--display);font-size:clamp(1.3rem,2.6vw,1.7rem);color:var(--text-primary)}
+.pl-copy p{margin-top:14px;color:var(--text-secondary);font-size:.98rem;line-height:1.6;max-width:42ch}
+@media (max-width:760px){.pl-slide{grid-template-columns:1fr;min-height:0}.pl-visual{min-height:220px}}
+
+/* era-specific mini visuals, contained so they never leak the design system elsewhere */
+.pl-era-box{width:100%;height:100%;min-height:220px;border-radius:14px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.pl-era-paper{background:#e8dfc8}
+.pl-era-paper .card{background:#f4ecd8;border:1px solid rgba(60,45,20,.18);box-shadow:0 10px 24px rgba(40,30,10,.16);padding:20px 22px;font-family:'Courier Prime',Courier,monospace;color:#332b1e;width:78%;transform:rotate(-1.2deg);font-size:.82rem;line-height:1.5}
+.pl-era-paper .card .redl{color:#a4241a;text-decoration:line-through}
+.pl-era-terminal{background:#020604}
+.pl-era-terminal .term{font-family:var(--mono);color:#5ff0d0;font-size:.82rem;line-height:1.75;padding:18px 20px;width:100%}
+.pl-era-terminal .term .p{color:#3fae94}
+.pl-era-terminal .cur{display:inline-block;width:.5ch;background:#5ff0d0;animation:plBlink 1s steps(1) infinite}
+@keyframes plBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.pl-era-crt{background:linear-gradient(180deg,#150523 0%,#1c0a2e 60%,#06030b 100%)}
+.pl-era-crt::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0px,rgba(0,0,0,.35) 1px,transparent 1px,transparent 3px);opacity:.4;pointer-events:none}
+.pl-era-crt .msg{position:relative;color:#fff;font-family:var(--display);font-weight:600;font-size:1.15rem;text-align:center;padding:0 22px;text-shadow:2px 0 #00f6ff, -2px 0 #ff2e8b}
+.pl-era-saas{background:#eef1f6}
+.pl-era-saas .cards{display:flex;gap:10px;padding:0 22px;flex-wrap:wrap;justify-content:center}
+.pl-era-saas .c{background:#fff;border:1px solid #dbe1e8;border-radius:8px;padding:12px 14px;font-family:Arial,Helvetica,sans-serif;font-size:.76rem;color:#28313d;width:118px}
+.pl-era-saas .c b{display:block;color:#2b57d6;font-size:.8rem;margin-bottom:4px}
+.pl-era-biplot{background:#081a2e}
+.pl-era-biplot img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.pl-era-final{background:#081a2e}
+.pl-era-final svg{width:82%;max-width:280px}
+.pl-era-final .curve{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:600;stroke-dashoffset:600;transition:stroke-dashoffset 1.4s var(--ease)}
+.pl-slide.pl-active .pl-era-final .curve{stroke-dashoffset:0}
+
+.pl-controls{display:flex;align-items:center;justify-content:space-between;margin-top:22px;gap:20px;flex-wrap:wrap}
+.pl-dots{display:flex;gap:9px}
+.pl-dots button{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0;transition:background .3s var(--ease),transform .3s var(--ease)}
+.pl-dots button.active{background:var(--accent);transform:scale(1.3)}
+.pl-arrows{display:flex;gap:10px}
+.pl-arrows button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .3s var(--ease),background .3s var(--ease)}
+.pl-arrows button:hover{border-color:var(--accent);background:rgba(23,195,178,.08)}
+.pl-arrows svg{width:18px;height:18px}
+.pl-cta{margin-top:0}
+@media (prefers-reduced-motion:reduce){.pl-track{transition:none}.pl-era-final .curve{transition:none}.pl-era-terminal .cur{animation:none}}
+
+/* interactive: trace tu punto */
+.trace{background:var(--panel);border-radius:24px;padding:clamp(36px,6vw,72px);margin-top:56px;text-align:center;position:relative;overflow:hidden}
+.trace svg{width:100%;max-width:640px;height:auto;margin:36px auto 0;display:block}
+.trace-path{fill:none;stroke:var(--line);stroke-width:2.5}
+.trace-path-fill{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:600;stroke-dashoffset:600}
+.trace-dot{fill:var(--warm);r:0}
+.trace-hold{
+  margin-top:28px;width:180px;height:180px;border-radius:50%;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;margin-left:auto;margin-right:auto;position:relative;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;user-select:none;background:var(--panel-2);
+}
+.trace-hold svg.ring{position:absolute;inset:-2px;transform:rotate(-90deg)}
+.trace-hold svg.ring circle{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:552;stroke-dashoffset:552;transition:stroke-dashoffset .05s linear}
+.trace-hold span{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-align:center;padding:0 20px}
+.trace.done .trace-hold span{color:var(--accent)}
+.trace-result{margin-top:22px;color:var(--text-secondary);font-size:.95rem;min-height:1.4em}
+
+/* faq */
+.faq-list{margin-top:48px;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.faq-item{border-bottom:1px solid var(--line)}
+.faq-q{width:100%;text-align:left;background:none;border:none;color:var(--text-primary);font-family:var(--body);font-weight:600;font-size:1.02rem;padding:22px 4px;display:flex;justify-content:space-between;align-items:center;gap:20px;cursor:pointer}
+.faq-q .plus{width:20px;height:20px;flex:none;position:relative}
+.faq-q .plus::before,.faq-q .plus::after{content:"";position:absolute;background:var(--accent);transition:transform .3s var(--ease)}
+.faq-q .plus::before{left:0;top:9px;width:20px;height:2px}
+.faq-q .plus::after{left:9px;top:0;width:2px;height:20px}
+.faq-item.open .plus::after{transform:rotate(90deg) translateX(0);opacity:0}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s var(--ease)}
+.faq-a p{padding:0 4px 22px;color:var(--text-secondary);max-width:66ch;line-height:1.55}
+
+/* contact */
+.contact{background:var(--panel);border-radius:24px;padding:clamp(32px,6vw,64px);margin-top:0;display:grid;grid-template-columns:1fr 1fr;gap:48px}
+.contact-form{display:flex;flex-direction:column;gap:16px}
+.field label{display:block;font-size:.85rem;color:var(--text-secondary);margin-bottom:7px}
+.field input,.field textarea{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--text-primary);padding:13px 14px;font-family:var(--body);font-size:.95rem;transition:border-color .25s var(--ease)}
+.field input:focus,.field textarea:focus{border-color:var(--accent);outline:none}
+.field textarea{resize:vertical;min-height:110px}
+.form-success{display:none;text-align:center;padding:40px 10px}
+.form-success.show{display:block}
+.form-success svg{width:52px;height:52px;color:var(--accent);margin:0 auto 16px}
+form.hide{display:none}
+@media (max-width:860px){.contact{grid-template-columns:1fr}}
+
+footer{padding:48px clamp(20px,6vw,64px) 40px;border-top:1px solid var(--line)}
+.footer-grid{max-width:1120px;margin:0 auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px;align-items:center}
+.footer-links{display:flex;gap:22px;flex-wrap:wrap;font-size:.88rem;color:var(--text-secondary)}
+.footer-links a{text-decoration:none;transition:color .25s var(--ease)}
+.footer-links a:hover{color:var(--accent)}
+.footer-note{margin-top:22px;max-width:1120px;margin-left:auto;margin-right:auto;font-size:.78rem;color:var(--text-secondary);opacity:.7}
+
+/* sound toggle */
+.sound-toggle{position:fixed;bottom:20px;left:20px;z-index:80;width:44px;height:44px;border-radius:50%;background:rgba(19,47,78,.7);backdrop-filter:blur(8px);border:1px solid var(--line);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .3s var(--ease),color .3s var(--ease)}
+.sound-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.sound-toggle svg{width:18px;height:18px}
+@media (max-width:720px){.sound-toggle{display:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important}
+}
+body.paused *, body.paused *::before, body.paused *::after{animation-play-state:paused !important}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Saltar al contenido</a>
+
+<nav class="nav">
+  <a href="#main" class="nav-mark" aria-label="BiPlot, inicio">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0E2A47"/><path d="M5 22 C10 22 10 10 16 10 C22 10 22 22 27 22" stroke="#17C3B2" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="16" cy="10" r="2.3" fill="#FF6B4A"/></svg>
+    BiPlot
+  </a>
+  <a href="#contacto" class="nav-cta">Agenda un diagnóstico</a>
+</nav>
+
+<button class="sound-toggle" id="soundToggle" aria-pressed="false" aria-label="Activar sonido de ambiente">
+  <svg id="soundIconOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><line x1="16" y1="9" x2="21" y2="15"/><line x1="21" y1="9" x2="16" y2="15"/></svg>
+  <svg id="soundIconOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18 6a9 9 0 0 1 0 12"/></svg>
+</button>
+
+<div class="hero-pin" id="heroPin">
+  <div class="hero-stage at-top" id="heroStage">
+    <div class="hero-media">
+      <div class="poster" id="heroPoster" aria-hidden="true"></div>
+      <video id="heroVideo" preload="none" muted playsinline aria-hidden="true" tabindex="-1"></video>
+    </div>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <div class="hero-loading" id="heroRing" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="126" style="stroke-dashoffset:var(--ld,126)"/></svg>
+    </div>
+
+    <div class="band" id="band-1" data-range="0.00,0.22">
+      <div class="band-inner">
+        <span class="kicker">Diagnóstico</span>
+        <h2><span class="hero-sr">Datos sueltos. Procesos enredados.</span><span class="split" aria-hidden="true" data-split></span></h2>
+      </div>
+    </div>
+
+    <div class="band" id="band-2" data-range="0.26,0.50">
+      <div class="band-inner">
+        <span class="kicker">El caos silencioso</span>
+        <h2><span class="hero-sr">Planillas, WhatsApp y un poco de todo, ordenado por nadie.</span><span class="split" aria-hidden="true" data-split></span></h2>
+      </div>
+    </div>
+
+    <div class="band" id="band-3" data-range="0.54,0.78">
+      <div class="band-inner">
+        <span class="kicker">La metodología</span>
+        <h2><span class="hero-sr">Cada proceso, trazado a tu medida.</span><span class="split" aria-hidden="true" data-split></span></h2>
+      </div>
+    </div>
+
+    <div class="band" id="band-settle" data-range="0.82,1.00">
+      <div class="band-inner">
+        <span class="kicker">BiPlot</span>
+        <h2><span class="hero-sr">Automatización hecha a la medida de tu negocio.</span><span class="split" aria-hidden="true" data-split></span></h2>
+        <p class="sub">Diagnosticamos tu proceso real, lo automatizamos a tu medida y nos quedamos después de la entrega.</p>
+        <div class="cta-row">
+          <a href="#contacto" class="btn primary">Agenda un diagnóstico</a>
+          <a href="#servicios" class="btn ghost">Ver cómo trabajamos</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-cue" aria-hidden="true">
+      <span>Scroll</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16M6 14l6 6 6-6"/></svg>
+    </div>
+
+    <div class="static-hero" id="staticHero">
+      <div class="scrim"></div>
+      <div class="static-hero-content">
+        <div class="inner">
+          <span class="kicker">BiPlot</span>
+          <h1>Automatización hecha a la medida de tu negocio.</h1>
+          <p>Diagnosticamos tu proceso real, lo automatizamos a tu medida y nos quedamos después de la entrega.</p>
+          <div class="cta-row">
+            <a href="#contacto" class="btn primary">Agenda un diagnóstico</a>
+            <a href="#servicios" class="btn ghost">Ver cómo trabajamos</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main id="main" tabindex="-1">
+
+  <section id="problema" aria-labelledby="problema-h">
+    <div class="wrap">
+      <span class="eyebrow">El problema</span>
+      <h2 class="h-lg reveal" id="problema-h">El caos silencioso que nadie puso en el presupuesto</h2>
+      <p class="lede reveal">Muchas pymes operan con planillas, WhatsApp y sistemas sueltos. Funciona, hasta que no: errores, duplicidad de datos y una dependencia total de la persona que "sabe cómo se hace esto".</p>
+      <div class="problem-grid reveal-group">
+        <div class="problem-card part">
+          <span class="quote-mark">"</span>
+          <p>Decidimos desde la urgencia: atendemos lo que explota primero, no lo que importa más.</p>
+          <span class="tag">Dueño de pyme de servicios</span>
+        </div>
+        <div class="problem-card part">
+          <span class="quote-mark">"</span>
+          <p>Si la persona que maneja la planilla se enferma o se va, el proceso completo se detiene con ella.</p>
+          <span class="tag">Dependencia operativa</span>
+        </div>
+        <div class="problem-card part">
+          <span class="quote-mark">"</span>
+          <p>Compramos una herramienta potente que el equipo nunca aprendió a usar. Fue dinero tirado.</p>
+          <span class="tag">Sobre el software genérico</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metodologia" aria-labelledby="metodologia-h">
+    <div class="wrap">
+      <span class="eyebrow">Cómo trabajamos</span>
+      <h2 class="h-lg reveal" id="metodologia-h">Sin plantillas. El proceso real, primero</h2>
+      <p class="lede reveal">Ningún cambio serio empieza por la solución. Empieza por leer cómo trabaja tu equipo hoy, paso a paso, sin apurarse.</p>
+      <div class="method">
+        <div class="method-rail"><div class="method-rail-fill" id="methodFill"></div></div>
+        <div class="method-step" data-step>
+          <div class="dot"></div>
+          <span class="num">01</span>
+          <h3>Diagnóstico del proceso real</h3>
+          <p>Observamos cómo trabaja tu equipo hoy: qué planillas usan, dónde se traba la información, quién carga con qué. Sin apurar la solución.</p>
+        </div>
+        <div class="method-step" data-step>
+          <div class="dot"></div>
+          <span class="num">02</span>
+          <h3>Diseño a la medida</h3>
+          <p>Trazamos el proceso ideal para tu operación específica, no para una plantilla genérica. Cada automatización se dibuja para tu negocio.</p>
+        </div>
+        <div class="method-step" data-step>
+          <div class="dot"></div>
+          <span class="num">03</span>
+          <h3>Construcción e integración</h3>
+          <p>Conectamos tus herramientas actuales entre sí, sin obligar a tu equipo a aprender un sistema nuevo desde cero.</p>
+        </div>
+        <div class="method-step" data-step>
+          <div class="dot"></div>
+          <span class="num">04</span>
+          <h3>Soporte después de la entrega</h3>
+          <p>Seguimos siendo el socio que responde, no el proveedor que entrega y desaparece.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="servicios" aria-labelledby="servicios-h">
+    <div class="wrap">
+      <span class="eyebrow">Servicios</span>
+      <h2 class="h-lg reveal" id="servicios-h">Lo que hacemos, en concreto</h2>
+      <p class="lede reveal">Cada servicio nace del diagnóstico. Nada se vende suelto sin entender primero tu proceso.</p>
+      <div class="services-grid reveal-group">
+        <div class="service-card part">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 17V7l8-4 8 4v10l-8 4-8-4Z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>
+          <h3>Integración de sistemas</h3>
+          <p>Conectamos las herramientas que ya usas para que dejen de vivir aisladas entre sí.</p>
+        </div>
+        <div class="service-card part">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 4h16v4H4zM4 10h10v4H4zM4 16h7v4H4z"/></svg>
+          <h3>Automatización de procesos</h3>
+          <p>Tareas repetitivas de cobranza, reportes o seguimiento, hechas por el sistema, no por una persona.</p>
+        </div>
+        <div class="service-card part">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+          <h3>Dashboards a medida</h3>
+          <p>Un panel que responde las preguntas que tu negocio realmente hace, no las que trae la plantilla.</p>
+        </div>
+        <div class="service-card part">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 3v9l6 3"/></svg>
+          <h3>Acompañamiento continuo</h3>
+          <p>Ajustamos y mejoramos el sistema a medida que tu negocio cambia. No es una entrega única.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="diferenciadores" aria-labelledby="dif-h">
+    <div class="wrap">
+      <span class="eyebrow">Por qué BiPlot</span>
+      <h2 class="h-lg reveal" id="dif-h">Trazado a tu medida, no forzado a una plantilla</h2>
+      <div class="diff">
+        <div class="diff-list reveal-group">
+          <div class="diff-item part">
+            <span class="n">01</span>
+            <div><h3>Sin curva de aprendizaje forzada</h3><p>Nos adaptamos a cómo tu equipo ya trabaja, en vez de exigirles aprender un sistema nuevo de cero.</p></div>
+          </div>
+          <div class="diff-item part">
+            <span class="n">02</span>
+            <div><h3>Metodología propia, no plantilla</h3><p>Cada biplot es distinto porque parte de datos reales, no de un molde. Cada automatización nuestra funciona igual.</p></div>
+          </div>
+          <div class="diff-item part">
+            <span class="n">03</span>
+            <div><h3>Soporte real después de la entrega</h3><p>Seguimos disponibles cuando el proceso cambia, no solo el día del lanzamiento.</p></div>
+          </div>
+          <div class="diff-item part">
+            <span class="n">04</span>
+            <div><h3>Casos concretos, no promesas genéricas</h3><p>Mostramos resultados reales, como Fundos 360, en vez de afirmaciones sobre "ser los mejores en IA".</p></div>
+          </div>
+        </div>
+        <div class="diff-visual reveal" id="diffVisual">
+          <img src="assets/support-still.jpg" alt="Curva de datos trazada con precisión sobre fondo azul profundo" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="caso" aria-labelledby="caso-h">
+    <div class="wrap">
+      <span class="eyebrow">Caso real</span>
+      <h2 class="h-lg reveal" id="caso-h" style="max-width:none">Fundos 360</h2>
+      <div class="case reveal">
+        <div>
+          <p style="color:var(--text-secondary);font-size:1.05rem;line-height:1.6;max-width:52ch">Fundos 360 operaba con reportes armados a mano, mes a mes, cruzando planillas de distintas fuentes. Diagnosticamos el proceso completo y construimos una automatización a su medida que conecta sus fuentes de datos y entrega el reporte listo, sin intervención manual.</p>
+          <div class="case-stat">
+            <div><b>-80%</b><span>tiempo de armado de reportes</span></div>
+            <div><b>0</b><span>planillas cruzadas a mano</span></div>
+            <div><b>1</b><span>fuente de verdad, conectada</span></div>
+          </div>
+        </div>
+        <div class="case-visual">
+          <img src="assets/case-still.jpg" alt="Panel de datos conectado, representando el caso Fundos 360" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="precios" aria-labelledby="precios-h">
+    <div class="wrap">
+      <span class="eyebrow">Modelo de ingresos</span>
+      <h2 class="h-lg reveal" id="precios-h">Precios claros, sin letra chica</h2>
+      <p class="lede reveal">El diagnóstico define el alcance real antes de cualquier número. Estos son los tres caminos más comunes.</p>
+      <div class="pricing-grid reveal-group">
+        <div class="price-card part">
+          <h3>Diagnóstico</h3>
+          <div class="amount">Desde $0<span> / primera sesión</span></div>
+          <ul>
+            <li>Revisión de tu proceso actual</li>
+            <li>Mapa de dónde se pierde tiempo</li>
+            <li>Propuesta de alcance, sin compromiso</li>
+          </ul>
+          <a href="#contacto" class="btn ghost">Agendar</a>
+        </div>
+        <div class="price-card featured part">
+          <h3>Proyecto a medida</h3>
+          <div class="amount">Cotizado<span> / según alcance</span></div>
+          <ul>
+            <li>Automatización diseñada para tu proceso</li>
+            <li>Integración con tus herramientas actuales</li>
+            <li>Acompañamiento durante el lanzamiento</li>
+          </ul>
+          <a href="#contacto" class="btn primary">Cotizar proyecto</a>
+        </div>
+        <div class="price-card part">
+          <h3>Soporte continuo</h3>
+          <div class="amount">Mensual<span> / desde el mes 2</span></div>
+          <ul>
+            <li>Ajustes cuando tu proceso cambia</li>
+            <li>Monitoreo de las automatizaciones activas</li>
+            <li>Canal directo de soporte</li>
+          </ul>
+          <a href="#contacto" class="btn ghost">Conversar plan</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="historia" aria-labelledby="historia-h">
+    <div class="wrap">
+      <span class="eyebrow">Cómo pensamos la automatización</span>
+      <h2 class="h-lg reveal" id="historia-h">Seis décadas, la misma línea</h2>
+      <p class="lede reveal">Antes de BiPlot, un proceso de negocio pasó por el papel, el terminal, el software genérico y el ruido de mil herramientas. Recorre las épocas.</p>
+
+      <div class="pl-carousel-wrap reveal">
+        <div class="pl-viewport">
+          <div class="pl-track" id="plTrack">
+
+            <div class="pl-slide pl-active" data-slide="0">
+              <div class="pl-visual">
+                <div class="pl-era-box pl-era-paper">
+                  <div class="card">Planillas a mano.<br>Un clip para no perder la hoja.<br><span class="redl">un cuaderno</span> WhatsApp y un Excel.</div>
+                </div>
+              </div>
+              <div class="pl-copy">
+                <span class="pl-era">1985 · El papel</span>
+                <h3>Antes de todo esto, había una libreta</h3>
+                <p>Planillas a mano, un clip para no perder la hoja y la memoria de una sola persona sosteniendo el proceso completo.</p>
+              </div>
+            </div>
+
+            <div class="pl-slide" data-slide="1">
+              <div class="pl-visual">
+                <div class="pl-era-box pl-era-terminal">
+                  <div class="term"><span class="p">&gt;</span> LEYENDO PROCESO...<br><span class="p">&gt;</span> 14 PASOS MANUALES<br><span class="p">&gt;</span> DIAGNÓSTICO<span class="cur">&nbsp;</span></div>
+                </div>
+              </div>
+              <div class="pl-copy">
+                <span class="pl-era">1990 · El diagnóstico</span>
+                <h3>Todo cambio serio empieza por leer el proceso real</h3>
+                <p>Antes de tocar nada, entendemos paso a paso cómo trabaja tu equipo hoy. Sin apurarnos a la solución.</p>
+              </div>
+            </div>
+
+            <div class="pl-slide" data-slide="2">
+              <div class="pl-visual">
+                <div class="pl-era-box pl-era-crt">
+                  <div class="msg">Ahora tienes dos problemas.</div>
+                </div>
+              </div>
+              <div class="pl-copy">
+                <span class="pl-era">1998 · El enredo</span>
+                <h3>Compraste una herramienta. Ahora tienes dos problemas</h3>
+                <p>Una herramienta potente que tu equipo nunca aprende a usar es dinero tirado. Así se ve el software genérico por dentro.</p>
+              </div>
+            </div>
+
+            <div class="pl-slide" data-slide="3">
+              <div class="pl-visual">
+                <div class="pl-era-box pl-era-saas">
+                  <div class="cards">
+                    <div class="c"><b>Escalable</b>Para cualquier negocio.</div>
+                    <div class="c"><b>Innovador</b>Con IA de punta.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="pl-copy">
+                <span class="pl-era">2015 · El genérico</span>
+                <h3>Todas prometen lo mismo, con las mismas tres palabras</h3>
+                <p>Así trabajan la mayoría de las consultoras de automatización: plantillas genéricas vestidas de innovación.</p>
+              </div>
+            </div>
+
+            <div class="pl-slide" data-slide="4">
+              <div class="pl-visual">
+                <div class="pl-era-box pl-era-biplot">
+                  <img src="assets/hero-ending.jpg" alt="La curva de datos de BiPlot" loading="lazy">
+                </div>
+              </div>
+              <div class="pl-copy">
+                <span class="pl-era">Hoy · BiPlot</span>
+                <h3>La misma línea, por fin trazada con precisión</h3>
+                <p>Procesos diagnosticados de verdad, automatizados a la medida de cada cliente, con soporte real después de la entrega.</p>
+              </div>
+            </div>
+
+            <div class="pl-slide" data-slide="5">
+              <div class="pl-visual">
+                <div class="pl-era-box pl-era-final">
+                  <svg viewBox="0 0 300 120" aria-hidden="true">
+                    <path class="curve" d="M10 90 C 70 90, 90 30, 150 30 S 240 90, 290 20"/>
+                    <circle cx="290" cy="20" r="5" fill="#FF6B4A"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="pl-copy">
+                <span class="pl-era">Tu turno</span>
+                <h3>Tu proceso es el próximo punto de esta curva</h3>
+                <p>Del papel al pixel, la línea nunca dejó de trazarse. Ahora te toca a ti agregar el siguiente punto.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="pl-controls">
+          <div class="pl-dots" id="plDots"></div>
+          <a href="plotline.html" class="btn ghost pl-cta">Ver el recorrido completo</a>
+          <div class="pl-arrows">
+            <button id="plPrev" aria-label="Época anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button id="plNext" aria-label="Época siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="momento" aria-labelledby="momento-h">
+    <div class="wrap">
+      <span class="eyebrow">Un gesto</span>
+      <h2 class="h-lg reveal" id="momento-h" style="max-width:none">Tu proceso es el próximo punto de esta curva</h2>
+      <p class="lede reveal">Mantén presionado para trazar tu propio punto en la línea de BiPlot.</p>
+      <div class="trace reveal" id="traceSection">
+        <div class="trace-hold" id="traceHold" role="button" tabindex="0" aria-label="Mantén presionado para trazar tu punto">
+          <svg class="ring" viewBox="0 0 180 180" aria-hidden="true"><circle cx="90" cy="90" r="88"/></svg>
+          <span id="traceLabel">Mantén<br>presionado</span>
+        </div>
+        <svg viewBox="0 0 600 200" aria-hidden="true">
+          <path class="trace-path" d="M20 160 C 150 160, 180 60, 300 60 S 480 160, 580 40"/>
+          <path class="trace-path-fill" id="tracePathFill" d="M20 160 C 150 160, 180 60, 300 60 S 480 160, 580 40"/>
+          <circle class="trace-dot" id="traceDot" cx="580" cy="40"/>
+        </svg>
+        <p class="trace-result" id="traceResult">&nbsp;</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-h">
+    <div class="wrap">
+      <span class="eyebrow">Preguntas frecuentes</span>
+      <h2 class="h-lg reveal" id="faq-h">Antes de que preguntes</h2>
+      <div class="faq-list">
+        <div class="faq-item" data-faq>
+          <button class="faq-q" aria-expanded="false">¿Mi equipo va a tener que aprender un sistema nuevo y complicado?<span class="plus" aria-hidden="true"></span></button>
+          <div class="faq-a"><p>No es el objetivo. Diseñamos la automatización para que se apoye en las herramientas que tu equipo ya conoce, en vez de forzar una curva de aprendizaje nueva.</p></div>
+        </div>
+        <div class="faq-item" data-faq>
+          <button class="faq-q" aria-expanded="false">¿Qué pasa si mi proceso cambia después de la entrega?<span class="plus" aria-hidden="true"></span></button>
+          <div class="faq-a"><p>Seguimos siendo tu punto de contacto. El plan de soporte continuo existe justamente para ajustar el sistema cuando tu negocio cambia, no solo para el lanzamiento.</p></div>
+        </div>
+        <div class="faq-item" data-faq>
+          <button class="faq-q" aria-expanded="false">¿Cuánto tiempo toma un proyecto típico?</button>
+          <div class="faq-a"><p>Depende del alcance definido en el diagnóstico. Un proceso acotado puede automatizarse en semanas; una integración más amplia toma más tiempo, y siempre lo conversamos con plazos reales antes de empezar.</p></div>
+        </div>
+        <div class="faq-item" data-faq>
+          <button class="faq-q" aria-expanded="false">¿Trabajan solo con empresas grandes?</button>
+          <div class="faq-a"><p>No. Trabajamos con pymes de servicios profesionales que sienten que su operación creció más rápido que sus procesos.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacto" aria-labelledby="contacto-h">
+    <div class="wrap">
+      <span class="eyebrow">Hablemos</span>
+      <h2 class="h-lg reveal" id="contacto-h">Agenda tu diagnóstico</h2>
+      <p class="lede reveal">Cuéntanos cómo trabaja tu equipo hoy. Nosotros te decimos qué se puede automatizar y cuánto tomaría.</p>
+      <div class="contact reveal">
+        <div>
+          <p style="color:var(--text-secondary);line-height:1.6">Una sesión corta, sin costo, para entender tu proceso. Si no hay algo real que automatizar, te lo decimos de frente.</p>
+          <div class="case-stat" style="margin-top:30px">
+            <div><b>1</b><span>sesión de diagnóstico</span></div>
+            <div><b>&lt;48h</b><span>tiempo de respuesta</span></div>
+          </div>
+        </div>
+        <form class="contact-form" id="contactForm" action="https://formspree.io/f/REEMPLAZAR_ID" method="POST">
+          <div class="field">
+            <label for="name">Nombre</label>
+            <input id="name" name="name" type="text" required autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="email">Correo</label>
+            <input id="email" name="email" type="email" required autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="message">Cuéntanos tu proceso</label>
+            <textarea id="message" name="message" required placeholder="Ej: hoy armamos el reporte mensual cruzando 4 planillas a mano..."></textarea>
+          </div>
+          <button type="submit" class="btn primary">Enviar y agendar diagnóstico</button>
+          <div class="form-success" id="formSuccess">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+            <p style="color:var(--text-primary);font-weight:600">Listo, lo recibimos.</p>
+            <p style="color:var(--text-secondary);margin-top:8px">Te respondemos dentro de 48 horas hábiles para coordinar el diagnóstico.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-grid">
+    <a href="#main" class="nav-mark" style="font-size:.95rem">
+      <svg viewBox="0 0 32 32" width="24" height="24" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0E2A47"/><path d="M5 22 C10 22 10 10 16 10 C22 10 22 22 27 22" stroke="#17C3B2" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="16" cy="10" r="2.2" fill="#FF6B4A"/></svg>
+      BiPlot
+    </a>
+    <div class="footer-links">
+      <a href="#servicios">Servicios</a>
+      <a href="#caso">Casos</a>
+      <a href="#precios">Precios</a>
+      <a href="#contacto">Contacto</a>
+      <a href="plotline.html">Cómo pensamos la automatización</a>
+    </div>
+  </div>
+  <p class="footer-note">© <span id="year"></span> BiPlot. Todas las imágenes de este sitio son generadas para representar conceptos, no fotografías de clientes o instalaciones reales.</p>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>
