@@ -264,6 +264,8 @@ body.motion-settled .reveal-group.in .part:nth-child(4){transition-delay:0ms}
 .case-stat div span{font-size:.82rem;color:var(--text-secondary)}
 .case-visual{border-radius:16px;overflow:hidden;background:var(--panel-2);aspect-ratio:4/3}
 .case-visual img{width:100%;height:100%;object-fit:cover}
+.case-visual.has-video{aspect-ratio:16/9;background:#0a1712}
+.case-visual video{width:100%;height:100%;display:block;object-fit:cover}
 @media (max-width:860px){.case{grid-template-columns:1fr}}
 
 /* pricing */
@@ -606,8 +608,8 @@ body.paused *, body.paused *::before, body.paused *::after{animation-play-state:
             <div><b>1</b><span>fuente de verdad, conectada</span></div>
           </div>
         </div>
-        <div class="case-visual">
-          <img src="assets/case-still.jpg" alt="Panel de datos conectado, representando el caso Fundos 360" loading="lazy">
+        <div class="case-visual has-video">
+          <video src="assets/caso-fundos360.mp4" poster="assets/caso-fundos360-poster.jpg" controls playsinline preload="metadata" aria-label="Teaser del caso Fundos 360"></video>
         </div>
       </div>
     </div>
